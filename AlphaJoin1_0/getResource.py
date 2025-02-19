@@ -10,7 +10,62 @@ def get_db_connection(db_connect_str):
     except Exception as e:
         print(f"Error connecting to database: {e}")
         return None
+    
+# 单模板的情况
+def mygetResource(query_path, tablenamedir, shorttolongpath, db_conn_str):
 
+    short_to_long = {}
+    
+    with open(query_path)as f:
+        sql_lines = f.readlines()
+
+    for line in sql_lines:
+        queryName = line.split('#####')[0]
+        sql = line.split('#####')[1]
+        # print(queryName, tablenames)
+        
+        tablenames = set()
+        conn = get_db_connection(db_conn_str)
+        if conn:
+            with conn.cursor() as cur:
+                try: 
+                    sql = f"EXPLAIN {''.join(sql)}"
+                    cur.execute(sql)
+                    rows = cur.fetchall()
+
+                    scan_language = []
+                    for line in rows:
+                        if line[0].find('Scan') != -1 & line[0].find('Bitmap Index') == -1:
+                            scan_language.append(line[0])
+                    for language in scan_language:
+                        word = language.split(' ')
+                        index = word.index('on')
+                        short_to_long[word[index + 2]] = word[index + 1]
+                        tablenames.add(word[index + 2])
+                       
+                except Exception as e:
+                    print(f"Error while fetching query plan: {e}")
+                    continue
+        
+        os.makedirs(tablenamedir, exist_ok=True)
+        
+        # 相同的模板的 tablenames 完全相同
+        if not os.path.exists(tablenamedir + "/" + queryName[0]):
+            f = open(tablenamedir + "/" + queryName[0], 'w')
+            f.write(str(list(tablenames)))
+            f.close()
+        
+        break
+
+    print(len(short_to_long))
+    
+    # Dump two dict to corresponding files
+    f = open(shorttolongpath, 'w')
+    f.write(str(short_to_long))
+    f.close()
+
+    cur.close()
+    conn.close()
 
 def getResource(querydir, tablenamedir, shorttolongpath, db_conn_str):
 

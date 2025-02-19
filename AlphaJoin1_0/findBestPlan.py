@@ -1,7 +1,7 @@
 from __future__ import division
 import os
 from copy import deepcopy
-from mcts import mcts
+from .mcts import mcts
 import time
 
 

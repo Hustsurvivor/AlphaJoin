@@ -7,7 +7,7 @@ import os
 import numpy as np
 import torch
 import pickle
-from models import ValueNet
+from .models import ValueNet
 
 shortToLongPath = '../resource/shorttolong'
 queryEncodedDictPath = './queryEncodedDict'  

@@ -1,18 +1,20 @@
 import config 
 from AlphaJoin1_0.arguments import get_args
-from AlphaJoin1_0.getResource import getResource
-from AlphaJoin1_0.getQueryEncode import getQueryAttributions, getQueryEncode
+from AlphaJoin1_0.getResource import mygetResource
+from AlphaJoin1_0.getQueryEncode import mygetQueryAttributions, mygetQueryEncode
 import AlphaJoin1_0.supervised
 from AlphaJoin1_0.findBestPlan import prepare, findBestPlan
 import AdaptiveDecisionNet.supervised
 
 if __name__ == '__main__':
     # acquire tablename and shorttolong file 
-    getResource(config.querydir, config.tablenamedir, config.shorttolongpath, config.db_conn_str)
+    if False:
+        mygetResource(config.querypath, config.tablenamedir, config.shorttolongpath, config.db_conn_str)
     
     # acquire predicate Encoding and query Encoding 
-    attrNames = getQueryAttributions(config.querydir)
-    getQueryEncode(attrNames, config.querydir, config.shorttolongpath, config.predicatesEncodeDictpath, config.queryEncodeDictpath)
+    if True:
+        attrNames = mygetQueryAttributions(config.querypath)
+        mygetQueryEncode(attrNames, config.querypath, config.shorttolongpath, config.predicatesEncodeDictpath, config.queryEncodeDictpath)
     
     ovn_trainer = AlphaJoin1_0.supervised.supervised(config.OVN_save_dir, config.shorttolongpath, config.predicatesEncodeDictpath)
 

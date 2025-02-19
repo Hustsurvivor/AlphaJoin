@@ -20,7 +20,7 @@ python AlphaJoin1.0/getQueryEncode.py
 ``` python
 python AlphaJoin1.0/pretreatment.py
 ```
-> ```pretreatment.py```输入的文件内容的形式为： ```queryName + "," + hintCore + "," + "timeout,-," + df.format(new Date());```
+> ```pretreatment.py```输入的文件内容的形式为： ```queryName + "," + hintCore + "," + "timeout,-," + df.format(new Date());``` 或者 ```queryName + "," + hintCore + "," + cost + "," + realOrder +"," + (realOrder.equals(hintCore)) + "," + df.format(new Date());```
 
 #### 4. train network
 运行```AlphaJoin1.0/train_network.py```文件，进行网络训练。用预处理时划分的训练集和验证集进行模型训练。

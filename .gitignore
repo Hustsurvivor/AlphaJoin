@@ -1,3 +1,5 @@
+__pycache__
+.vscode
 resource/jobtablename
 resource/queryEncodedDict
 resource/shorttolong

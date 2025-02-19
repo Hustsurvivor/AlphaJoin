@@ -1,19 +1,20 @@
 # db
-host="localhost",
-database="imdb",
-user="zpf",
-password="wsnk59ej"
-db_conn_str = f"host={host} dbname={database} user={user} password={password}"
+host="localhost"
+database="imdb"
+user="lgn"
+password="li6545991360"
+db_conn_str = f'host={host} dbname={database} user={user} password={password}'
 
 # dataset 
-querydir = 'resource/jobquery'  # JOB query
-tablenamedir = 'resource/jobtablename'  # tablename involved in the query statement
-shorttolongpath = 'resource/shorttolong'  # Mapping of table abbreviations to full names
-predicatesEncodeDictpath = 'resource/predicatesEncodedDict'   
-queryEncodeDictpath = 'resource/queryEncodedDict' 
+querypath = 'data/damon/sql.txt'  # JOB query
+tablenamedir = 'data/damon/jobtablename'  # tablename involved in the query statement
+shorttolongpath = 'data/damon/shorttolong'  # Mapping of table abbreviations to full names
+
+predicatesEncodeDictpath = 'data/damon/predicatesEncodedDict'   
+queryEncodeDictpath = 'data/damon/queryEncodedDict' 
 
 # OVN 
-OVN_train_file_path = ''
+OVN_train_file_path = 'data/damon/ova_train_file.txt'
 test_file_path = ''
 OVN_model_path = 'saved_models/ovn_supervised.pt'
 OVN_save_dir = 'saved_models/'

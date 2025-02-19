@@ -1,5 +1,138 @@
 import os
-from getResource import getResource  
+import sqlparse
+from .getResource import getResource  
+
+def mygetQueryAttributions(query_path):
+    
+    with open(query_path)as f:
+        sql_lines = f.readlines()
+    attr = set()
+
+    for line in sql_lines[:300]:
+        sql = line.split('#####')[1]
+        file_context = sqlparse.format(sql, reindent=True, keyword_case='upper').split('\n')
+
+        # find WHERE
+        k = -1
+        for i in range(len(file_context)):
+            k = k + 1
+            if file_context[i].find("WHERE") != -1:
+                break
+
+        # handle a sentence after WHERE
+        for i in range(k, len(file_context)):
+            temp = file_context[i].split()
+            for word in temp:
+                if '.' in word:
+                    if word[0] == "'":
+                        continue
+                    if word[0] == '(':
+                        word = word[1:]
+                    if word[-1] == ';':
+                        word = word[:-1]
+                    attr.add(word)
+
+    attrNames = list(attr)
+    attrNames.sort()
+    return attrNames
+
+def mygetQueryEncode(attrNames, query_path, shorttolongpath,
+                   predicatesEncodeDictpath, queryEncodeDictpath):
+
+    # Read all table abbreviations
+    f = open(shorttolongpath, 'r')
+    a = f.read()
+    short_to_long = eval(a)
+    f.close()
+    tableNames = []
+
+    for i in short_to_long:
+        tableNames.append(i)
+    tableNames.sort()
+
+    # Mapping of table name abbreviations and numbers (list subscripts)
+    table_to_int = {}
+    int_to_table = {}
+    for i in range(len(tableNames)):
+        int_to_table[i] = tableNames[i]
+        table_to_int[tableNames[i]] = i
+
+    # Mapping of attributes and numbers (list subscripts)
+    attr_to_int = {}
+    int_to_attr = {}
+    for i in range(len(attrNames)):
+        int_to_attr[i] = attrNames[i]
+        attr_to_int[attrNames[i]] = i
+    # print(table_to_int)
+
+
+    queryEncodeDict = {}
+    joinEncodeDict = {}
+    predicatesEncodeDict = {}
+    with open(query_path)as f:
+        sql_line = f.readlines()
+
+    for line in sql_line:
+        joinEncode = [0 for _ in range(len(tableNames)*len(tableNames))]
+        predicatesEncode = [0 for _ in range(len(attrNames))]
+
+        # Read query statement
+        queryName = line.split('#####')[0]
+        sql = line.split('#####')[1]
+        file_context = sqlparse.format(sql, reindent=True, keyword_case='upper').split('\n')
+
+        # find WHERE
+        k = -1
+        for i in range(len(file_context)):
+            k = k + 1
+            if file_context[i].find("WHERE") != -1:
+                break
+
+        # handle a sentence after WHERE
+        for i in range(k, len(file_context)):
+            temp = file_context[i].split()
+
+            if "=" in temp:
+                index = temp.index("=")
+                if (filter(temp[index - 1]) in attrNames) & (filter(temp[index + 1]) in attrNames):
+                    table1 = temp[index - 1].split('.')[0]
+                    table2 = temp[index + 1].split('.')[0]
+                    joinEncode[table_to_int[table1] * len(tableNames) + table_to_int[table2]] = 1
+                    joinEncode[table_to_int[table2] * len(tableNames) + table_to_int[table1]] = 1
+                else:
+                    for word in temp:
+                        if '.' in word:
+                            if word[0] == "'":
+                                continue
+                            if word[0] == '(':
+                                word = word[1:]
+                            if word[-1] == ';':
+                                word = word[:-1]
+                            predicatesEncode[attr_to_int[word]] = 1
+            else:
+                for word in temp:
+                    if '.' in word:
+                        if word[0] == "'":
+                            continue
+                        if word[0] == '(':
+                            word = word[1:]
+                        if word[-1] == ';':
+                            word = word[:-1]
+                        predicatesEncode[attr_to_int[word]] = 1
+        predicatesEncodeDict[queryName] = predicatesEncode
+        queryEncodeDict[queryName] = joinEncode + predicatesEncode
+
+    for i in queryEncodeDict.items():
+        print(i)
+    print(len(tableNames), tableNames)
+    print(len(attrNames), attrNames)
+
+    f = open(predicatesEncodeDictpath, 'w')
+    f.write(str(predicatesEncodeDict))
+    f.close()
+    f = open(queryEncodeDictpath, 'w')
+    f.write(str(queryEncodeDict))
+    f.close()
 
 # Get all the attributes used to select the filter vector
 def getQueryAttributions(querydir):
