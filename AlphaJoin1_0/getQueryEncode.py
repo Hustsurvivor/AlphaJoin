@@ -1,14 +1,8 @@
 import os
-from getResource import getResource
-
-querydir = 'resource/jobquery'   
-tablenamedir = 'resource/jobtablename'    
-shorttolongpath = 'resource/shorttolong'  
-predicatesEncodeDictpath = 'resource/predicatesEncodedDict'   
-queryEncodeDictpath = 'resource/queryEncodedDict'  
+from getResource import getResource  
 
 # Get all the attributes used to select the filter vector
-def getQueryAttributions():
+def getQueryAttributions(querydir):
     fileList = os.listdir(querydir)
     fileList.sort()
     attr = set()
@@ -43,7 +37,8 @@ def getQueryAttributions():
     attrNames.sort()
     return attrNames
 
-def getQueryEncode(attrNames):
+def getQueryEncode(attrNames, querydir, shorttolongpath,
+                   predicatesEncodeDictpath, queryEncodeDictpath):
 
     # Read all table abbreviations
     f = open(shorttolongpath, 'r')
@@ -152,9 +147,10 @@ def filter(word):
 
 
 if __name__ == '__main__':
-    getResource()
-    attrNames = getQueryAttributions()
-    getQueryEncode(attrNames)
+    # getResource()
+    # attrNames = getQueryAttributions()
+    # getQueryEncode(attrNames)
+    pass
 
 
 

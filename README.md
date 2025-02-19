@@ -1,6 +1,5 @@
 # AlphaJoin
 AlphaJoin: Join Order Selection à la AlphaGo
-## run damon
 
 ### AlphaJoin 1.0 
 #### 1. get resource
@@ -41,4 +40,10 @@ python AlphaJoin1.0/findBestPlan.py
 ``` python 
 python AdaptiveDecisionNet/crossvalidation.py
 ```
-其中pretreatment输入的文件的格式为``` queryName + "," + origintime + "," + qpoptime + "," + label ```
+其中pretreatment输入的文件的格式为``` queryName + "," + PGtime + "," + hinttime + "," + label ```
+
+### 训练流程
+先用训练集训练AlphaJoin1.0得到训练好的OVN(order value network)网络。
+再用AlphaJoin1.0对训练集进行测试，得到预测的hint，由hint得到plan运行的时间hinttime。
+用训练集的PGtime和hinttime训练AlphaJoin2.0的ADN(adaptive decision network)网络。
+最终联合OVN与ADN对测试集进行测试。

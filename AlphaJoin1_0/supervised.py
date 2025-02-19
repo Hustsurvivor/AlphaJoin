@@ -6,8 +6,8 @@ import torch
 import pickle
 from .models import ValueNet
 
-shortToLongPath = 'resource/shorttolong'
-predicatesEncodeDictPath = 'resource/predicatesEncodedDict'
+# shortToLongPath = 'resource/shorttolong'
+# predicatesEncodeDictPath = 'resource/predicatesEncodedDict'
 
 
 class data:
@@ -18,7 +18,7 @@ class data:
 
 
 class supervised:
-    def __init__(self, args): 
+    def __init__(self, save_dir, shortToLongPath, predicatesEncodeDictPath): 
         # Read dict predicatesEncoded 
         f = open(predicatesEncodeDictPath, 'r')
         a = f.read()
@@ -42,14 +42,14 @@ class supervised:
         self.num_inputs = len(tables) * len(tables) + len(self.predicatesEncodeDict["1a"])
         # The dimension of the vector output by the network
         self.num_output = 5    
-        self.args = args
+        self.save_dir = save_dir
         self.right = 0
 
         # build up the network
         self.value_net = ValueNet(self.num_inputs, self.num_output)
         # check some dir
-        if not os.path.exists(self.args.save_dir):
-            os.mkdir(self.args.save_dir)
+        if not os.path.exists(self.save_dir):
+            os.mkdir(self.save_dir)
 
         self.dataList = []
         self.testList = []
@@ -159,13 +159,13 @@ class supervised:
                 self.test_network()
                 print('[{}]  Epoch: {}, Loss: {:.5f}'.format(datetime.now(), step, loss1000))
             if step % 200000 == 0:
-                torch.save(self.value_net.state_dict(), self.args.save_dir + 'supervised.pt')
+                torch.save(self.value_net.state_dict(), self.save_dir + 'ovn_supervised.pt')
                 self.test_network()
 
     # functions to test the network
     def test_network(self):
         self.load_data()
-        model_path = self.args.save_dir + 'supervised.pt'
+        model_path = self.save_dir + 'ovn_supervised.pt'
         self.actor_net.load_state_dict(torch.load(model_path, map_location=lambda storage, loc: storage))
         self.actor_net.eval()
 

@@ -6,14 +6,14 @@ from copy import deepcopy
 import numpy as np
 from .models import ValueNet
 import torch
-model_path = './saved_models/supervised.pt'
+# model_path = './saved_models/supervised.pt'
 
-predictionNet = ValueNet(856, 5)
-predictionNet.load_state_dict(torch.load(model_path, map_location=lambda storage, loc: storage))
-predictionNet.eval()
+# predictionNet = ValueNet(856, 5)
+# predictionNet.load_state_dict(torch.load(model_path, map_location=lambda storage, loc: storage))
+# predictionNet.eval()
 
 
-def getReward(state):
+def getReward(state, predictionNet):
     inputState = torch.tensor(state.board + state.predicatesEncode, dtype=torch.float32)
     with torch.no_grad():
         predictionRuntime = predictionNet(inputState)
@@ -23,7 +23,7 @@ def getReward(state):
     return reward
 
 
-def randomPolicy(state):
+def randomPolicy(state, predictionNet):
     while not state.isTerminal():
         try:
             temp = state.getPossibleActions()
@@ -32,7 +32,7 @@ def randomPolicy(state):
             raise Exception("Non-terminal state has no possible actions: " + str(state))
         state = state.takeAction(action)
     # reward = state.getReward()
-    reward = getReward(state)
+    reward = getReward(state, predictionNet)
     # print(reward)
     return reward
 
@@ -49,7 +49,8 @@ class treeNode():
 
 
 class mcts():
-    def __init__(self, iterationLimit=None, explorationConstant=1 / math.sqrt(2),
+    def __init__(self, model_path,
+                 iterationLimit=None, explorationConstant=1 / math.sqrt(2),
                  rolloutPolicy=randomPolicy):
         if iterationLimit == None:
             raise ValueError("Must have either a time limit or an iteration limit")
@@ -59,6 +60,12 @@ class mcts():
         self.searchLimit = iterationLimit
         self.explorationConstant = explorationConstant
         self.rollout = rolloutPolicy
+        
+        predictionNet = ValueNet(856, 5)
+        predictionNet.load_state_dict(torch.load(model_path, map_location=lambda storage, loc: storage))
+        predictionNet.eval()
+        
+        self.predictionNet = predictionNet
 
     def search(self, initialState):
         self.root = treeNode(initialState, None)
@@ -71,7 +78,7 @@ class mcts():
     def executeRound(self):
         node = self.selectNode(self.root)
         newState = deepcopy(node.state)
-        reward = self.rollout(newState)
+        reward = self.rollout(newState, self.predictionNet)
         self.backpropogate(node, reward)
 
     def selectNode(self, node):

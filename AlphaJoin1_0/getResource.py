@@ -3,25 +3,16 @@ import os
 import numpy as np
 import psycopg2
 
-querydir = 'resource/jobquery'  # JOB query
-tablenamedir = 'resource/jobtablename'  # tablename involved in the query statement
-shorttolongpath = 'resource/shorttolong'  # Mapping of table abbreviations to full names
-
-def get_db_connection():
+def get_db_connection(db_connect_str):
     try:
-        conn = psycopg2.connect(
-            host="localhost",
-            database="imdb",
-            user="zpf",
-            password="wsnk59ej"
-        )
+        conn = psycopg2.connect(db_connect_str)
         return conn
     except Exception as e:
         print(f"Error connecting to database: {e}")
         return None
 
 
-def getResource():
+def getResource(querydir, tablenamedir, shorttolongpath, db_conn_str):
 
     short_to_long = {}
     fileList = os.listdir(querydir)
@@ -65,7 +56,7 @@ def getResource():
         file_context = file_object.read()
         file_object.close()
 
-        conn = get_db_connection()
+        conn = get_db_connection(db_conn_str)
         if conn:
             with conn.cursor() as cur:
                 try: 
@@ -98,4 +89,10 @@ def getResource():
 
 
 if __name__ == '__main__':
-    getResource()
+    querydir = 'resource/jobquery'  # JOB query
+    tablenamedir = 'resource/jobtablename'  # tablename involved in the query statement
+    shorttolongpath = 'resource/shorttolong'  # Mapping of table abbreviations to full names
+    db_conn_str = f"host=localhost dbname=imdb user=zpf password=wsnk59ej"
+    
+    
+    getResource(querydir, tablenamedir, shorttolongpath, db_conn_str)

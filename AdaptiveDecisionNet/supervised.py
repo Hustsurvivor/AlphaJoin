@@ -23,7 +23,7 @@ class data:
 
 
 class supervised:
-    def __init__(self, args):
+    def __init__(self, save_dir, queryEncodedDictPath, shortToLongPath):
         # Read dict predicatesEncoded 
         f = open(queryEncodedDictPath, 'r')
         a = f.read()
@@ -47,14 +47,14 @@ class supervised:
         self.num_inputs = len(tables) * len(tables) + len(self.predicatesEncodeDict["1a"])
         # The dimension of the vector output by the network
         self.num_output = 2  
-        self.args = args
+        self.save_dir = save_dir
 
         # build up the network
         self.actor_net = ValueNet(self.num_inputs, self.num_output)
         self.actor_net.apply(self.init_weights)
         # check some dir
-        if not os.path.exists(self.args.save_dir):
-            os.mkdir(self.args.save_dir)
+        if not os.path.exists(self.save_dir):
+            os.mkdir(self.save_dir)
 
         self.datasetnumber = 4 
         self.trainList = []
@@ -98,7 +98,7 @@ class supervised:
 
     # train 
     def supervised(self):
-        # model_path = self.args.save_dir + 'supervised.pt'
+        # model_path = self.save_dir + 'adn_supervised.pt'
         # self.actor_net.load_state_dict(torch.load(model_path, map_location=lambda storage, loc: storage))
         # self.actor_net.eval()
         self.load_data()
@@ -131,14 +131,14 @@ class supervised:
                 print('[{}]  Epoch: {}, Loss: {:.5f}'.format(datetime.now(), step, loss1000))
                 loss1000 = 0
             # if step % 2000000 == 0:
-            #     torch.save(self.actor_net.state_dict(), self.args.save_dir + 'supervised.pt')
+            #     torch.save(self.actor_net.state_dict(), self.save_dir + 'adn_supervised.pt')
             #     self.test_network()
-        torch.save(self.actor_net.state_dict(), self.args.save_dir + 'supervised.pt')
+        torch.save(self.actor_net.state_dict(), self.save_dir + 'adn_supervised.pt')
 
     # functions to test the network
     def test_network(self):
         self.load_data()
-        model_path = self.args.save_dir + 'supervised.pt'
+        model_path = self.save_dir + 'adn_supervised.pt'
         self.actor_net.load_state_dict(torch.load(model_path, map_location=lambda storage, loc: storage))
         self.actor_net.eval()
 

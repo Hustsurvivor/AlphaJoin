@@ -5,42 +5,6 @@ from mcts import mcts
 import time
 
 
-queryEncodeDictPath = 'resource/queryEncodedDict' 
-predicatesEncodeDictPath = 'resource/predicatesEncodedDict'
-shorttolongpath = 'resource/shorttolong'  
-tablenamedir = 'resource/jobtablename' 
-querydir = "resource/jobquery"
-
-f = open(queryEncodeDictPath, 'r')
-a = f.read()
-queryEncodeDict = eval(a)
-f.close()
-
-f = open(predicatesEncodeDictPath, 'r')
-a = f.read()
-predicatesEncodeDict = eval(a)
-f.close()
-
-
-# Get all tablenames
-tables = []
-f = open(shorttolongpath, 'r')
-a = f.read()
-short_to_long = eval(a)
-f.close()
-for i in short_to_long.keys():
-    tables.append(i)
-tables.sort()
-
-# Mapping of tablename abbreviations and numbers (list subscripts)
-totalNumberOfTables = len(tables)
-tableToInt = {}
-intToTable = {}
-for i in range(totalNumberOfTables):
-    intToTable[i] = tables[i]
-    tableToInt[tables[i]] = i
-
-
 class planState:
     def __init__(self, totalNumberOfTables, numberOfTables, queryEncode, predicatesEncode):
         self.tableNumber = totalNumberOfTables
@@ -98,7 +62,7 @@ class Action:
     def __hash__(self):
         return hash((self.x, self.y, self.currentStep))
 
-def decode(currentState, tableList):
+def decode(currentState, tableList, intToTable):
     tempdect = {}
     for i in range(len(tableList)):
         tempdect[tableList[i]] = tableList[i]
@@ -120,7 +84,8 @@ def decode(currentState, tableList):
     return tempdect[tableList[0]]
 
 
-def findBestPlan():
+def findBestPlan(ovn_model_path, tablenamedir, totalNumberOfTables, queryEncodeDict, 
+                 predicatesEncodeDict, intToTable, result_path):
     queryNameList = os.listdir(tablenamedir)
     queryNameList.sort()
     searchFactor = 15
@@ -137,7 +102,7 @@ def findBestPlan():
                                 predicatesEncodeDict[queryName])
         currentState = initialState
 
-        mct = mcts(iterationLimit=(int)(len(currentState.getPossibleActions()) *  searchFactor))        
+        mct = mcts(ovn_model_path, iterationLimit=(int)(len(currentState.getPossibleActions()) *  searchFactor))        
         start = time.time()
         while currentState.currentStep != 1:
             # Search for the best choice in the current state
@@ -148,8 +113,51 @@ def findBestPlan():
             mct.searchLimit = (int)(len(currentState.getPossibleActions()) *  searchFactor)
         elapsed = (time.time() - start) * 1000
         # Decode selected results
-        hint = decode(currentState, tableList)
+        hint = decode(currentState, tableList, intToTable)
         print(queryName, ",", hint, ",%.3f" % elapsed)
+        with open(result_path, 'a')as f:
+            f.write(queryName + '#####' + hint + '#####' + "%.3f" % elapsed + '\n')
 
+def prepare(queryEncodeDictPath, predicatesEncodeDictPath, shorttolongpath):
+    f = open(queryEncodeDictPath, 'r')
+    a = f.read()
+    queryEncodeDict = eval(a)
+    f.close()
+
+    f = open(predicatesEncodeDictPath, 'r')
+    a = f.read()
+    predicatesEncodeDict = eval(a)
+    f.close()
+
+
+    # Get all tablenames
+    tables = []
+    f = open(shorttolongpath, 'r')
+    a = f.read()
+    short_to_long = eval(a)
+    f.close()
+    for i in short_to_long.keys():
+        tables.append(i)
+    tables.sort()
+
+    # Mapping of tablename abbreviations and numbers (list subscripts)
+    totalNumberOfTables = len(tables)
+    tableToInt = {}
+    intToTable = {}
+    for i in range(totalNumberOfTables):
+        intToTable[i] = tables[i]
+        tableToInt[tables[i]] = i
+
+    return totalNumberOfTables, queryEncodeDict, predicatesEncodeDict, intToTable
+    
 if __name__ == '__main__':
-    findBestPlan()
+    queryEncodeDictPath = 'resource/queryEncodedDict' 
+    predicatesEncodeDictPath = 'resource/predicatesEncodedDict'
+    shorttolongpath = 'resource/shorttolong'  
+    tablenamedir = 'resource/jobtablename' 
+    querydir = "resource/jobquery"
+    result_path = ''
+    
+    totalNumberOfTables, queryEncodeDict, predicatesEncodeDict, intToTable = prepare(queryEncodeDictPath, predicatesEncodeDictPath, shorttolongpath)        
+    findBestPlan(tablenamedir, totalNumberOfTables, queryEncodeDict, predicatesEncodeDict, intToTable, result_path)
+    
