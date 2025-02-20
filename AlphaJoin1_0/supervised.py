@@ -46,7 +46,8 @@ class supervised:
         self.right = 0
 
         # build up the network
-        self.value_net = ValueNet(self.num_inputs, self.num_output)
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.value_net = ValueNet(self.num_inputs, self.num_output).to(self.device)
         # check some dir
         if not os.path.exists(self.save_dir):
             os.mkdir(self.save_dir)
@@ -140,14 +141,14 @@ class supervised:
             
             index = random.randint(0, len(self.dataList) - 1)
             state = self.dataList[index].state
-            state_tensor = torch.tensor(state, dtype=torch.float32)
+            state_tensor = torch.tensor(state, dtype=torch.float32).to(self.device)
 
             predictionRuntime = torch.log(self.value_net(state_tensor) + 1e-10)
             predictionRuntime = predictionRuntime.view(1,-1)
 
             label = []
             label.append(self.dataList[index].label)
-            label_tensor = torch.tensor(label)
+            label_tensor = torch.tensor(label).to(self.device)
 
             loss = loss_func(predictionRuntime, label_tensor)
 
@@ -167,7 +168,8 @@ class supervised:
 
     def load_model(self):
         model_path = self.save_dir + 'ovn_supervised.pt'
-        self.value_net.load_state_dict(torch.load(model_path, map_location=lambda storage, loc: storage))
+        self.value_net.load_state_dict(torch.load(model_path, map_location=self.device))
+        self.value_net.to(self.device)
         self.value_net.eval()
         pass 
     
@@ -178,7 +180,7 @@ class supervised:
         correct = 0
         for step in range(self.testList.__len__()):
             state = self.testList[step].state
-            state_tensor = torch.tensor(state, dtype=torch.float32)
+            state_tensor = torch.tensor(state, dtype=torch.float32).to(self.device)
 
             predictionRuntime = self.value_net(state_tensor)
             prediction = predictionRuntime.detach().cpu().numpy()
@@ -192,7 +194,7 @@ class supervised:
         correct1 = 0
         for step in range(self.dataList.__len__()):
             state = self.dataList[step].state
-            state_tensor = torch.tensor(state, dtype=torch.float32)
+            state_tensor = torch.tensor(state, dtype=torch.float32).to(self.device)
 
             predictionRuntime = self.value_net(state_tensor)
             # prediction = predictionRuntime.detach().cpu().numpy()[0]
