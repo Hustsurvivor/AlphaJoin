@@ -14,7 +14,8 @@ import torch
 
 
 def getReward(state, predictionNet):
-    inputState = torch.tensor(state.board + state.predicatesEncode, dtype=torch.float32)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    inputState = torch.tensor(state.board + state.predicatesEncode, dtype=torch.float32).to(device)
     with torch.no_grad():
         predictionRuntime = predictionNet(inputState)
     prediction = predictionRuntime.detach().cpu().numpy()
@@ -47,7 +48,6 @@ class treeNode():
         self.totalReward = 0
         self.children = {}
 
-
 class mcts():
     def __init__(self, model_path,
                  iterationLimit=None, explorationConstant=1 / math.sqrt(2),
@@ -57,15 +57,16 @@ class mcts():
         # number of iterations of the search
         if iterationLimit < 1:
             raise ValueError("Iteration limit must be greater than one")
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.searchLimit = iterationLimit
         self.explorationConstant = explorationConstant
         self.rollout = rolloutPolicy
         
-        predictionNet = ValueNet(856, 5)
-        predictionNet.load_state_dict(torch.load(model_path, map_location=lambda storage, loc: storage))
-        predictionNet.eval()
+        predictionNet = ValueNet(19+64, 5)
+        predictionNet.load_state_dict(torch.load(model_path, map_location=self.device))
         
-        self.predictionNet = predictionNet
+        self.predictionNet = predictionNet.to(self.device)
+        self.predictionNet.eval()
 
     def search(self, initialState):
         self.root = treeNode(initialState, None)

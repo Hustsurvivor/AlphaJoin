@@ -84,18 +84,21 @@ def decode(currentState, tableList, intToTable):
     return tempdect[tableList[0]]
 
 
-def findBestPlan(ovn_model_path, tablenamedir, totalNumberOfTables, queryEncodeDict, 
+def findBestPlan(ovn_model_path, query_file_path, tablenamedir, totalNumberOfTables, queryEncodeDict, 
                  predicatesEncodeDict, intToTable, result_path):
-    queryNameList = os.listdir(tablenamedir)
-    queryNameList.sort()
+    with open(query_file_path)as f:
+        sql_lines = f.readlines()
+    
     searchFactor = 15
-    for queryName in queryNameList:
+    for line in sql_lines:
         # Get the list of queried tables
-        tablenamepath = tablenamedir + "/" + queryName
+        queryName = line.split(',')[0]
+        tablenamepath = tablenamedir + "/" + queryName[0]
         file_object = open(tablenamepath)
         file_context = file_object.read()
-        tableList = eval(file_context)
         file_object.close()
+        
+        tableList = eval(file_context)
 
         # Construct the initial state
         initialState = planState(totalNumberOfTables, len(tableList), queryEncodeDict[queryName],

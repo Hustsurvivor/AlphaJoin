@@ -39,7 +39,7 @@ class supervised:
             self.table_to_int[tables[i]] = i
         
         # The dimension of the network input vector
-        self.num_inputs = len(tables) * len(tables) + len(self.predicatesEncodeDict["1a"])
+        self.num_inputs = len(tables) * len(tables) + len(self.predicatesEncodeDict["s0"])
         # The dimension of the vector output by the network
         self.num_output = 5    
         self.save_dir = save_dir
@@ -136,6 +136,8 @@ class supervised:
         count = 0
 
         for step in range(1, 16000001):
+            self.value_net.train()
+            
             index = random.randint(0, len(self.dataList) - 1)
             state = self.dataList[index].state
             state_tensor = torch.tensor(state, dtype=torch.float32)
@@ -154,27 +156,31 @@ class supervised:
             optim.step() 
             loss1000 += loss.item()
             if step % 1000 == 0:
+                torch.save(self.value_net.state_dict(), self.save_dir + 'ovn_supervised.pt')
                 print('[{}]  Epoch: {}, Loss: {:.5f}'.format(datetime.now(), step, loss1000))
                 loss1000 = 0
                 self.test_network()
-                print('[{}]  Epoch: {}, Loss: {:.5f}'.format(datetime.now(), step, loss1000))
-            if step % 200000 == 0:
-                torch.save(self.value_net.state_dict(), self.save_dir + 'ovn_supervised.pt')
-                self.test_network()
+                # print('[{}]  Epoch: {}, Loss: {:.5f}'.format(datetime.now(), step, loss1000))
+            # if step % 200000 == 0:
+            #     torch.save(self.value_net.state_dict(), self.save_dir + 'ovn_supervised.pt')
+            #     self.test_network()
 
+    def load_model(self):
+        model_path = self.save_dir + 'ovn_supervised.pt'
+        self.value_net.load_state_dict(torch.load(model_path, map_location=lambda storage, loc: storage))
+        self.value_net.eval()
+        pass 
+    
     # functions to test the network
     def test_network(self):
         self.load_data()
-        model_path = self.save_dir + 'ovn_supervised.pt'
-        self.actor_net.load_state_dict(torch.load(model_path, map_location=lambda storage, loc: storage))
-        self.actor_net.eval()
-
+        self.value_net.eval()
         correct = 0
         for step in range(self.testList.__len__()):
             state = self.testList[step].state
             state_tensor = torch.tensor(state, dtype=torch.float32)
 
-            predictionRuntime = self.actor_net(state_tensor)
+            predictionRuntime = self.value_net(state_tensor)
             prediction = predictionRuntime.detach().cpu().numpy()
             maxindex = np.argmax(prediction)
             label = self.testList[step].label
@@ -188,7 +194,7 @@ class supervised:
             state = self.dataList[step].state
             state_tensor = torch.tensor(state, dtype=torch.float32)
 
-            predictionRuntime = self.actor_net(state_tensor)
+            predictionRuntime = self.value_net(state_tensor)
             # prediction = predictionRuntime.detach().cpu().numpy()[0]
             prediction = predictionRuntime.detach().cpu().numpy()
             maxindex = np.argmax(prediction)

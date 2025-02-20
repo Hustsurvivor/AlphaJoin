@@ -111,6 +111,7 @@ class supervised:
 
         # starttime = datetime.now()
         for step in range(1, 300001):
+            self.actor_net.train()
             index = random.randint(0, len(self.trainList) - 1)
             state = self.trainList[index].state
             state_tensor = torch.tensor(state, dtype=torch.float32)
@@ -130,16 +131,19 @@ class supervised:
             if step % 1000 == 0:
                 print('[{}]  Epoch: {}, Loss: {:.5f}'.format(datetime.now(), step, loss1000))
                 loss1000 = 0
+                torch.save(self.actor_net.state_dict(), self.save_dir + 'adn_supervised.pt')
             # if step % 2000000 == 0:
             #     torch.save(self.actor_net.state_dict(), self.save_dir + 'adn_supervised.pt')
             #     self.test_network()
-        torch.save(self.actor_net.state_dict(), self.save_dir + 'adn_supervised.pt')
-
+    
+    def load_model(self):
+        model_path = self.save_dir + 'adn_supervised.pt'
+        self.actor_net.load_state_dict(torch.load(model_path, map_location=lambda storage, loc: storage))
+        pass 
+    
     # functions to test the network
     def test_network(self):
         self.load_data()
-        model_path = self.save_dir + 'adn_supervised.pt'
-        self.actor_net.load_state_dict(torch.load(model_path, map_location=lambda storage, loc: storage))
         self.actor_net.eval()
 
         # testset
