@@ -1,5 +1,6 @@
 # AlphaJoin
 AlphaJoin: Join Order Selection à la AlphaGo
+为AlphaJoin增加一些注释，并将训练过程和测试过程规范化。
 
 ### AlphaJoin 1.0 
 #### 1. get resource
